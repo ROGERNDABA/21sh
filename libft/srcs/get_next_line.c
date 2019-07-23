@@ -3,98 +3,79 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rmdaba <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: Roger Ndaba <rogerndaba@gmail.com>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2018/06/06 16:57:17 by rmdaba            #+#    #+#             */
-/*   Updated: 2018/06/06 16:57:39 by rmdaba           ###   ########.fr       */
+/*   Created: 2019/07/23 09:49:39 by Roger Ndaba       #+#    #+#             */
+/*   Updated: 2019/07/23 09:50:21 by Roger Ndaba      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../incl/get_next_line.h"
+#define MAX_SIZE_FD 100
 
-char			*ft_free_strjoin(char const *s1, char const *s2, int j)
+char			*ft_stock_the_new_line(char *str)
 {
-	char	*dest;
-	int		i;
-
-	if (!(s1 && s2))
-		return (NULL);
-	i = ft_strlen((char*)s1) + ft_strlen((char*)s2);
-	if ((dest = (char *)malloc(sizeof(dest) * i + 1)) == NULL)
-		return (NULL);
-	dest = ft_strcpy(dest, s1);
-	dest = ft_strcat(dest, s2);
-	if (j == 1 || j == 3)
-		free((void *)s1);
-	if (j == 2 || j == 3)
-		free((void *)s2);
-	return (dest);
-}
-
-char			*ft_savestr(char *str, char *instr)
-{
-	char		*ptr;
 	int			i;
+	int			len;
+	char		*new;
 
-	ptr = str;
 	i = 0;
-	while (ptr != instr)
+	len = 0;
+	while (str[len++])
+		;
+	if (!(new = (char *)malloc(sizeof(*new) * len + 1)))
+		return (NULL);
+	while (i < len && str[i] != '\n')
 	{
-		++ptr;
+		new[i] = str[i];
 		i++;
 	}
-	if (i == 0)
-		return (ft_strdup("\0"));
-	return (ft_strsub(str, 0, i));
+	new[i] = '\0';
+	return (new);
 }
 
-int				ft_get_line(char **save, char **line)
+static char		*ft_clean_new(char *str)
 {
-	char		*tmp;
+	char		*new;
+	int			i;
 
-	if (ft_strchr(*save, '\n'))
+	i = 0;
+	while (str[i] != '\n' && str[i])
+		i++;
+	if ((str[i] && !str[i + 1]) || !str[i])
 	{
-		*line = ft_savestr(*save, ft_strchr(*save, '\n'));
-		tmp = ft_strdup(*save);
-		free(*save);
-		*save = ft_strdup(ft_strchr(tmp, '\n') + 1);
-		free(tmp);
-		return (1);
+		ft_strdel(&str);
+		return (NULL);
 	}
-	else if (ft_strlen(*save) != 0)
-	{
-		*line = ft_savestr(*save, ft_strchr(*save, '\0'));
-		*save = ft_strchr(*save, '\0');
-		return (1);
-	}
-	return (0);
+	new = ft_strdup(str + i + 1);
+	ft_strdel(&str);
+	return (new);
 }
 
 int				get_next_line(const int fd, char **line)
 {
-	char		buf[BUFF_SIZE + 1];
-	char		*fcontent;
-	static char	*save;
+	char		buff[BUFF_SIZE + 1];
 	int			ret;
-	int			n;
+	static char	*new;
 
-	ret = 0;
-	n = 0;
-	if (fd == -1 || !line || BUFF_SIZE < 1)
+	if (!new)
+		new = ft_strnew(1);
+	if (BUFF_SIZE < 0 || !line || fd > MAX_SIZE_FD || fd < 0)
 		return (-1);
-	fcontent = NULL;
-	while ((ret = read(fd, buf, BUFF_SIZE)) > 0)
+	ret = 2;
+	while (!(ft_strchr(new, '\n')))
 	{
-		n = 1;
-		buf[ret] = '\0';
-		if (fcontent == NULL)
-			fcontent = ft_strdup(buf);
-		else
-			fcontent = ft_free_strjoin(fcontent, buf, 1);
+		ret = read(fd, buff, BUFF_SIZE);
+		if (ret == -1)
+			return (-1);
+		buff[ret] = '\0';
+		new = ft_strjoin(new, buff);
+		if (ret == 0 && *new == '\0')
+			return (0);
+		if (ret == 0)
+			break ;
 	}
-	if (n == 1)
-		save = fcontent;
-	if (ret == -1)
-		return (-1);
-	return (ft_get_line(&save, &(*line)));
+	*line = ft_stock_the_new_line(new);
+	new = ft_clean_new(new);
+	return (1);
 }
