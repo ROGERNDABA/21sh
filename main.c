@@ -49,7 +49,7 @@ main (void)
   while (1)
     {
       read (STDIN_FILENO, &c, 1);
-      if (c == '\004')          /* C-d */
+      if (c == 'q')          /* C-d */
         break;
 	else
 		ft_putchar_fd(c, STDIN_FILENO);
