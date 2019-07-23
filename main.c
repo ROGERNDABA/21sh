@@ -1,56 +1,66 @@
 #include <libft.h>
+#include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <termios.h>
+#include <ctype.h>
+#include <errno.h>
 
-/* Use this variable to remember original terminal attributes. */
+#define CTRL_KEY(k) ((k) & 0x1f)
 
-struct termios saved_attributes;
+struct termios orig_termios;
 
-void
-reset_input_mode (void)
-{
-  tcsetattr (STDIN_FILENO, TCSANOW, &saved_attributes);
+void disable_raw_mode() {
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios);
 }
 
-void
-set_input_mode (void)
-{
-  struct termios tattr;
-  char *name;
-
-  /* Make sure stdin is a terminal. */
-  if (!isatty (STDIN_FILENO))
-    {
-      fprintf (stderr, "Not a terminal.\n");
-      exit (EXIT_FAILURE);
-    }
-
-  /* Save the terminal attributes so we can restore them later. */
-  tcgetattr (STDIN_FILENO, &saved_attributes);
-//   atexit (reset_input_mode);
-
-  /* Set the funny terminal modes. */
-  tcgetattr (STDIN_FILENO, &tattr);
-  tattr.c_lflag &= ~(ICANON|ECHO); /* Clear ICANON and ECHO. */
-  tattr.c_cc[VMIN] = 1;
-  tattr.c_cc[VTIME] = 0;
-  tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
+void	die(const char *s) {
+	perror(s);
+	exit(1);
 }
 
-int		main (void)
-{
-	char	c;
+void	enable_raw_mode() {
+	struct termios raw;
 
-	set_input_mode ();
-	while (1)
-	{
-		read (STDIN_FILENO, &c, 1);
-		if (c == 'q')
+
+	tcgetattr(STDIN_FILENO, &orig_termios);
+	atexit(disable_raw_mode);
+
+	raw = orig_termios;
+	raw.c_iflag &= ~(ICRNL | BRKINT | IXON);
+	raw.c_lflag &= ~(ICANON | ECHO | IEXTEN | ISIG);
+	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
+}
+
+int main() {
+	char c;
+
+	enable_raw_mode();
+	while (1) {
+		c = '\0';
+		if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
+			die("read");
+		if (iscntrl(c))
+		{
+			printf("%d\r\n", c);
+		}
+		else
+		{
+			printf("%d ('%c')\r\n", c, c);
+		}
+		if (c == CTRL_KEY('q'))
 			break;
-	else
-		ft_putchar_fd(c, STDIN_FILENO);
 	}
-	return EXIT_SUCCESS;
+
+	// while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') {
+	// 	// ft_putchar_fd(c, STDIN_FILENO);
+	// 	if (iscntrl(c))
+	// 	{
+	// 		printf("%d\n", c);
+	// 	}
+	// 	else
+	// 	{
+	// 		printf("%d ('%c')\n", c, c);
+	// 	}
+	// }
+	return 0;
 }
