@@ -29,7 +29,7 @@ set_input_mode (void)
 
   /* Save the terminal attributes so we can restore them later. */
   tcgetattr (STDIN_FILENO, &saved_attributes);
-  atexit (reset_input_mode);
+//   atexit (reset_input_mode);
 
   /* Set the funny terminal modes. */
   tcgetattr (STDIN_FILENO, &tattr);
@@ -39,23 +39,18 @@ set_input_mode (void)
   tcsetattr (STDIN_FILENO, TCSAFLUSH, &tattr);
 }
 
-int
-main (void)
+int		main (void)
 {
-  char c;
+	char	c;
 
-  set_input_mode ();
-
-  while (1)
-    {
-      read (STDIN_FILENO, &c, 1);
-      if (c == 'q')          /* C-d */
-        break;
+	set_input_mode ();
+	while (1)
+	{
+		read (STDIN_FILENO, &c, 1);
+		if (c == 'q')
+			break;
 	else
 		ft_putchar_fd(c, STDIN_FILENO);
-	  	// ft_putstr_fd("", STDIN_FILENO)
-
-    }
-
-  return EXIT_SUCCESS;
+	}
+	return EXIT_SUCCESS;
 }
