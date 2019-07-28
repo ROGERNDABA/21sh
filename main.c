@@ -31,28 +31,28 @@ void	enable_raw_mode() {
 	tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
-int get_line(char **line, char c)
+int make_line(char **line, char c)
 {
-    size_t    line_len;
-    char    *l2;
-    char    *l3;
-    int        i;
+	size_t	line_len;
+	char	*l2;
+	char	*l3;
+	int		i;
 
-    if (*line == NULL)
-        return (0);
-    l2 = ft_strdup(*line);
-    i = -1;
-    line_len = ft_strlen(*line);
-    free(*line);
-    l3 = (char *)malloc((sizeof(char) * line_len) + 2);
-    while (l2[++i])
-      l3[i] = l2[i];
-    l3[line_len] = c;
-    l3[line_len + 1] = '\0';
-    *line = ft_strdup(l3);
-    free(l3);
-    free(l2);
-    return (1);
+	if (*line == NULL)
+		return (0);
+	l2 = ft_strdup(*line);
+	i = -1;
+	line_len = ft_strlen(*line);
+	free(*line);
+	l3 = (char *)malloc((sizeof(char) * line_len) + 2);
+	while (l2[++i])
+	  l3[i] = l2[i];
+	l3[line_len] = c;
+	l3[line_len + 1] = '\0';
+	*line = ft_strdup(l3);
+	free(l3);
+	free(l2);
+	return (1);
 }
 
 int main() {
@@ -65,13 +65,13 @@ int main() {
 		c = '\0';
 		if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
 			die("read");
-		// get_line(&line, c);
-		ft_putchar_fd(0, c);
-		if (c == 13)
-		break;
-			printf("%d", c);
-		if (c == CTRL_KEY('q'))
+		// make_line(&line, c);
+		ft_putchar_fd(c, 0);
+		// ft_putnbr_fd(c, 0);
+		if (c == 3)
 			break;
+		// if (c == CTRL_KEY('q'))
+		// 	break;
 	}
 
 	// while (read(STDIN_FILENO, &c, 1) == 1 && c != 'q') {
